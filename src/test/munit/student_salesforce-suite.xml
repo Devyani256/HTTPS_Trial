@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="student_salesforce-suite.xml" />
+	<munit:test name="GetByID-test" doc:id="87bae01e-ce4d-49a8-9f41-bd2235dc6dbf" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="7a568918-44fa-401c-a240-291d42c65d01" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://GetByIDtest\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://GetByIDtest\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to GetByID" doc:id="2cdc693c-b7b8-4f16-9aff-548e5e7c5134" name="GetByID"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="b8733118-081e-4ac9-b057-cebbf395e304" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import GetByIDtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="POST-test" doc:id="21d79797-54c4-45be-9e9f-241c41168821" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="4ee76312-5c8c-495f-96bd-929643f10b2d" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://POSTtest\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://POSTtest\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to POST" doc:id="d3324625-7261-4360-869a-01ec03c2ecfc" name="POST"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="42c8a6e0-6a62-406c-8615-bad83917c103" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import POSTtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

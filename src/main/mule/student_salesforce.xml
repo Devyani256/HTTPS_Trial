@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="606928fc-7766-4741-97ad-4128a6509537" >
+		<http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="Demo.jks" keyPassword="Pass@1234" password="Pass@1234" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="ca70b248-e753-4094-a855-461782451422" >
+		<salesforce:basic-connection username="devyani25@gmail.com" password="Pass@1234" securityToken="9GihR4wOYItLeHxf7JdU22Cde" />
+	</salesforce:sfdc-config>
+	<flow name="GetByID" doc:id="164b9289-1c37-4786-9edd-b5a1c23c60db" >
+		<http:listener doc:name="Listener" doc:id="3ca81734-6422-428b-8777-8beff931e073" config-ref="HTTP_Listener_config" path="/Students/{id}"/>
+		<salesforce:query doc:name="Query" doc:id="42d5cfd8-331d-4d0b-92c9-40951268bdc5" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[select 	Name,StudentID__c,Number__c,Email__c from Student__c where StudentID__c = ':id']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	id : attributes.uriParams.'id'
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="ae5e07ac-b047-4330-8be8-ed71b300bf40" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+	Name: $.Name,
+	ID: $.StudentID__c,
+	number: $.Number__c,
+	email: $.Email__c
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="POST" doc:id="6ac386e1-d64e-46b2-bed5-277ff10a12fc" >
+		<http:listener doc:name="Listener" doc:id="59c4fc86-2500-46ea-ae31-bac602d5bde0" config-ref="HTTP_Listener_config" path="/Student"/>
+		<ee:transform doc:name="Transform Message" doc:id="4154f423-f897-4eae-99b1-2c41c95f9ba4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+		Name: payload.Name,
+	Number__c: payload.number,
+		Email__c: payload.email
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Student__c" doc:name="Create" doc:id="46e315a5-995d-4c64-b8dc-fcbb0437e58f" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="bbd51802-c8de-40cb-95e2-479289527e9d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Created"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
